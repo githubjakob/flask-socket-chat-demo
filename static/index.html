@@ -1,0 +1,57 @@
+
+<html lang="de">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    console.log("###foo")
+    var socket = io();
+    socket.on('connect', function() {
+        socket.emit('my event', {data: 'I\'m connected!'});
+    });
+
+    socket.on('onMessageReceived', function(msg) {
+        console.log("###onMessageReceived", msg)
+        document.querySelector("#chat").appendChild(document.createTextNode(msg.message))
+        document.querySelector("#chat").appendChild(document.createElement("br"))
+    })
+
+    function send() {
+        console.log("sending")
+        const channel = document.getElementById("dropdown").value;
+        const input = document.getElementById("input-text").value;
+        socket.emit('sendMessage', {message: input, channel: channel});
+    }
+
+    function changeChannel() {
+        const channels = Array.from(document.querySelectorAll('#multiselect option:checked')).map(option => option.value);
+        socket.emit('subscribeChannels', {channels: channels});
+    }
+</script>
+
+<body>
+
+<label for="multiselect">Select channels you want to listen:</label>
+<select id="multiselect" multiple>
+    <option value="channel1">Channel 1</option>
+    <option value="channel2">Channel 2</option>
+    <option value="channel3">Channel 3</option>
+</select>
+
+<button type="button" onclick="changeChannel()">change channel</button>
+
+</br>
+</br>
+
+<label for="dropdown">Select a channel:</label>
+<select id="dropdown">
+    <option value="channel1">Channel 1</option>
+    <option value="channel2">Channel 2</option>
+    <option value="channel3">Channel 3</option>
+</select>
+<input type="text" id="input-text">
+<button onclick="send()">Send</button>
+<div id="chat"></div>
+</body>
+
+
+</html>
