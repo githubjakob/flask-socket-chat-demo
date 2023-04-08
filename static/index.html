@@ -3,8 +3,25 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
 <script type="text/javascript" charset="utf-8">
-    console.log("###foo")
-    var socket = io();
+    // Get the URLSearchParams object from the current URL
+    const urlParams = new URLSearchParams(window.location.search);
+
+    var user
+
+    // Check if a specific query parameter exists
+    if (urlParams.has('user')) {
+        // Retrieve the value of the 'user' query parameter
+        user = urlParams.get('user');
+
+        // Use the value of the 'user' query parameter
+        console.log(`User: ${user}`);
+    } else {
+        // Handle case when 'user' query parameter is not present
+        console.log('User query parameter not found');
+        user = "user1"
+    }
+
+    var socket = io({extraHeaders: {"Authorization": user}});
     socket.on('connect', function() {
         socket.emit('my event', {data: 'I\'m connected!'});
     });
@@ -15,20 +32,74 @@
         document.querySelector("#chat").appendChild(document.createElement("br"))
     })
 
-    function send() {
+    socket.on('onUserUpdated', function(msg) {
+        console.log("###onUserUpdated", msg)
+        if (msg.online === true) {
+            document.getElementById(msg.userId + "Status").className = "online"
+        } else {
+            document.getElementById(msg.userId + "Status").className = "offline"
+        }
+    })
+
+    async function send() {
         console.log("sending")
         const channel = document.getElementById("dropdown").value;
         const input = document.getElementById("input-text").value;
-        socket.emit('sendMessage', {message: input, channel: channel});
+        await fetch("/message", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({message: input, channel: channel}),
+        });
     }
 
     function changeChannel() {
         const channels = Array.from(document.querySelectorAll('#multiselect option:checked')).map(option => option.value);
         socket.emit('subscribeChannels', {channels: channels});
     }
+
+    function changeUser() {
+        const userId = document.getElementById("dropdownUser").value;
+        console.log("Change user to ", userId)
+        socket.disconnect();
+        socket = io({extraHeaders: {"Authorization": userId}});
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+    }
 </script>
 
+<head>
+
+    <style>
+        .online {
+            background-color: green;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .offline {
+            background-color: red;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
 <body>
+
+<label for="dropdownUser">Select a user:</label>
+<select onchange="changeUser()" id="dropdownUser">
+    <option value="user1">User 1</option>
+    <option value="user2">User 2</option>
+    <option value="user3">User 3</option>
+</select>
+
+</br>
+</br>
 
 <label for="multiselect">Select channels you want to listen:</label>
 <select id="multiselect" multiple>
@@ -52,6 +123,23 @@
 <button onclick="send()">Send</button>
 <div id="chat"></div>
 </body>
+
+
+</br>
+</br>
+
+<p>Users</p>
+<div style="display: flex">
+    <div>User1</div><div id="user1Status" class="offline"> </div>
+</div>
+
+<div style="display: flex">
+    <div>User2</div><div id="user2Status" class="offline"> </div>
+</div>
+
+<div style="display: flex">
+    <div>User3</div><div id="user3Status" class="offline"> </div>
+</div>
 
 
 </html>
