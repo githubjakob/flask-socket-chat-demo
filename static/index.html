@@ -6,22 +6,28 @@
     // Get the URLSearchParams object from the current URL
     const urlParams = new URLSearchParams(window.location.search);
 
-    var user
+    let user
+    let channel
 
-    // Check if a specific query parameter exists
     if (urlParams.has('user')) {
-        // Retrieve the value of the 'user' query parameter
         user = urlParams.get('user');
-
-        // Use the value of the 'user' query parameter
         console.log(`User: ${user}`);
     } else {
-        // Handle case when 'user' query parameter is not present
         console.log('User query parameter not found');
         user = "user1"
     }
 
-    var socket = io({extraHeaders: {"Authorization": user}});
+    let socket = io({extraHeaders: {"Authorization": user}});
+
+    if (urlParams.has('channel')) {
+        channel = urlParams.get('channel');
+        console.log(`Channel: ${channel}`);
+        socket.emit('subscribeChannels', {channels: [channel]});
+    } else {
+        console.log('Channel query parameter not found');
+        channel = "channel1"
+    }
+
     socket.on('connect', function() {
         socket.emit('my event', {data: 'I\'m connected!'});
     });
@@ -45,7 +51,7 @@
         console.log("sending")
         const channel = document.getElementById("dropdown").value;
         const input = document.getElementById("input-text").value;
-        await fetch("/message", {
+        await fetch(`/channel/${channel}/message`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -57,6 +63,7 @@
     function changeChannel() {
         const channels = Array.from(document.querySelectorAll('#multiselect option:checked')).map(option => option.value);
         socket.emit('subscribeChannels', {channels: channels});
+        document.querySelector("#chat").innerHTML = ""
     }
 
     function changeUser() {

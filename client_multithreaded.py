@@ -10,9 +10,12 @@ def connect():
     def on_message(data):
         pass
 
-    sio.connect('http://localhost:8000', auth={"userId": "user1"})
-    for i in range(10):
+    sio.connect('http://localhost:80', auth={"userId": "user1"})
+    sio.wait()
+
+    for i in range(100):
         sio.emit('sendMessage', {"message": "my message", "channel": "channel1"})
+
 
 if __name__ == '__main__':
     with concurrent.futures.ThreadPoolExecutor() as executor:

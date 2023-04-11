@@ -12,15 +12,20 @@ It consists of:
 - A nginx reverse proxy in front of the two Flask applications
 - Supervisord for running everything in a Docker container
 - Docker compose that runs the Docker container with the example application and a Redis container
+- Python AsyncIO clients for load testing
 
-# Motivation
+## Motivation
 
 Flask-SocketIO recommends either using eventlet or gevent as the worker type for the gunicorn web server.
 However, an existing Flask application might already run using the regular sync gunicorn workers. Assuming we don't 
 want to change the setup for the existing Flask application we can run the Flask-SocketIO application in a separate
 process. In this case a Redis server can be used to handle the inter process communication between the two Flask applications.
 
-# TODO
+## Miro Board 
+
+https://miro.com/app/board/uXjVMUlDu70=/
+
+## TODO
 
 - Extend the clients for load testing
 - Add a database for storing the chat messages
